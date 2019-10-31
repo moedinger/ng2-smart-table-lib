@@ -25,6 +25,8 @@ export declare class Ng2SmartTableComponent implements OnChanges {
     grid: Grid;
     defaultSettings: Object;
     isAllSelected: boolean;
+    filterItems: Map<any, any>;
+    sortItem: any;
     ngOnChanges(changes: {
         [propertyName: string]: SimpleChange;
     }): void;

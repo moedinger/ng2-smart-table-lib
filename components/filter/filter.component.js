@@ -39,7 +39,15 @@ var FilterComponent = (function () {
             });
         }
     };
+    FilterComponent.prototype.onSFormControl = function ($event) {
+        this.formControl = $event.control;
+    };
     FilterComponent.prototype.onFilter = function (query) {
+        this.filter.emit({
+            search: query,
+            field: this.column.id,
+            control: this.formControl,
+        });
         this.source.addFilter({
             field: this.column.id,
             search: query,
@@ -68,7 +76,7 @@ FilterComponent = __decorate([
     Component({
         selector: 'ng2-smart-table-filter',
         styles: [":host .ng2-smart-filter /deep/ input,:host .ng2-smart-filter /deep/ select{width:100%;line-height:normal;padding:.375em .75em;font-weight:400}:host .ng2-smart-filter /deep/ input[type=search]{box-sizing:inherit}:host .ng2-smart-filter /deep/ .completer-dropdown-holder{font-weight:400}:host .ng2-smart-filter /deep/ a{font-weight:400} /*# sourceMappingURL=filter.component.css.map */ "],
-        template: "\n    <div class=\"ng2-smart-filter\" *ngIf=\"column.isFilterable\" [ngSwitch]=\"column.getFilterType()\">\n      <select-filter *ngSwitchCase=\"'list'\"\n                     [query]=\"query\"\n                     [ngClass]=\"inputClass\"\n                     [column]=\"column\"\n                     (filter)=\"onFilter($event)\">\n      </select-filter>\n      <checkbox-filter *ngSwitchCase=\"'checkbox'\"\n                       [query]=\"query\"\n                       [ngClass]=\"inputClass\"\n                       [column]=\"column\"\n                       (filter)=\"onFilter($event)\">\n      </checkbox-filter>\n      <completer-filter *ngSwitchCase=\"'completer'\"\n                        [query]=\"query\"\n                        [ngClass]=\"inputClass\"\n                        [column]=\"column\"\n                        (filter)=\"onFilter($event)\">\n      </completer-filter>\n      <input-filter *ngSwitchDefault\n                    [query]=\"query\"\n                    [ngClass]=\"inputClass\"\n                    [column]=\"column\"\n                    (filter)=\"onFilter($event)\">\n      </input-filter>\n    </div>\n  ",
+        template: "\n    <div class=\"ng2-smart-filter\" *ngIf=\"column.isFilterable\" [ngSwitch]=\"column.getFilterType()\">\n      <select-filter *ngSwitchCase=\"'list'\"\n                     [query]=\"query\"\n                     [ngClass]=\"inputClass\"\n                     [column]=\"column\"\n                     (filter)=\"onFilter($event)\">\n      </select-filter>\n      <checkbox-filter *ngSwitchCase=\"'checkbox'\"\n                       [query]=\"query\"\n                       [ngClass]=\"inputClass\"\n                       [column]=\"column\"\n                       (filter)=\"onFilter($event)\"\n                       (sFormControl)=\"onSFormControl($event)\">\n      </checkbox-filter>\n      <completer-filter *ngSwitchCase=\"'completer'\"\n                        [query]=\"query\"\n                        [ngClass]=\"inputClass\"\n                        [column]=\"column\"\n                        (filter)=\"onFilter($event)\">\n      </completer-filter>\n      <input-filter *ngSwitchDefault\n                    [query]=\"query\"\n                    [ngClass]=\"inputClass\"\n                    [column]=\"column\"\n                    (filter)=\"onFilter($event)\"\n                    (sFormControl)=\"onSFormControl($event)\">\n      </input-filter>\n    </div>\n  ",
     })
 ], FilterComponent);
 export { FilterComponent };

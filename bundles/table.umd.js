@@ -1350,7 +1350,15 @@ var FilterComponent = (function () {
             });
         }
     };
+    FilterComponent.prototype.onSFormControl = function ($event) {
+        this.formControl = $event.control;
+    };
     FilterComponent.prototype.onFilter = function (query) {
+        this.filter.emit({
+            search: query,
+            field: this.column.id,
+            control: this.formControl,
+        });
         this.source.addFilter({
             field: this.column.id,
             search: query,
@@ -1379,7 +1387,7 @@ FilterComponent = __decorate$16([
     _angular_core.Component({
         selector: 'ng2-smart-table-filter',
         styles: [":host .ng2-smart-filter /deep/ input,:host .ng2-smart-filter /deep/ select{width:100%;line-height:normal;padding:.375em .75em;font-weight:400}:host .ng2-smart-filter /deep/ input[type=search]{box-sizing:inherit}:host .ng2-smart-filter /deep/ .completer-dropdown-holder{font-weight:400}:host .ng2-smart-filter /deep/ a{font-weight:400} /*# sourceMappingURL=filter.component.css.map */ "],
-        template: "\n    <div class=\"ng2-smart-filter\" *ngIf=\"column.isFilterable\" [ngSwitch]=\"column.getFilterType()\">\n      <select-filter *ngSwitchCase=\"'list'\"\n                     [query]=\"query\"\n                     [ngClass]=\"inputClass\"\n                     [column]=\"column\"\n                     (filter)=\"onFilter($event)\">\n      </select-filter>\n      <checkbox-filter *ngSwitchCase=\"'checkbox'\"\n                       [query]=\"query\"\n                       [ngClass]=\"inputClass\"\n                       [column]=\"column\"\n                       (filter)=\"onFilter($event)\">\n      </checkbox-filter>\n      <completer-filter *ngSwitchCase=\"'completer'\"\n                        [query]=\"query\"\n                        [ngClass]=\"inputClass\"\n                        [column]=\"column\"\n                        (filter)=\"onFilter($event)\">\n      </completer-filter>\n      <input-filter *ngSwitchDefault\n                    [query]=\"query\"\n                    [ngClass]=\"inputClass\"\n                    [column]=\"column\"\n                    (filter)=\"onFilter($event)\">\n      </input-filter>\n    </div>\n  ",
+        template: "\n    <div class=\"ng2-smart-filter\" *ngIf=\"column.isFilterable\" [ngSwitch]=\"column.getFilterType()\">\n      <select-filter *ngSwitchCase=\"'list'\"\n                     [query]=\"query\"\n                     [ngClass]=\"inputClass\"\n                     [column]=\"column\"\n                     (filter)=\"onFilter($event)\">\n      </select-filter>\n      <checkbox-filter *ngSwitchCase=\"'checkbox'\"\n                       [query]=\"query\"\n                       [ngClass]=\"inputClass\"\n                       [column]=\"column\"\n                       (filter)=\"onFilter($event)\"\n                       (sFormControl)=\"onSFormControl($event)\">\n      </checkbox-filter>\n      <completer-filter *ngSwitchCase=\"'completer'\"\n                        [query]=\"query\"\n                        [ngClass]=\"inputClass\"\n                        [column]=\"column\"\n                        (filter)=\"onFilter($event)\">\n      </completer-filter>\n      <input-filter *ngSwitchDefault\n                    [query]=\"query\"\n                    [ngClass]=\"inputClass\"\n                    [column]=\"column\"\n                    (filter)=\"onFilter($event)\"\n                    (sFormControl)=\"onSFormControl($event)\">\n      </input-filter>\n    </div>\n  ",
     })
 ], FilterComponent);
 
@@ -1449,6 +1457,7 @@ var CheckboxFilterComponent = (function (_super) {
         var _this = _super.call(this) || this;
         _this.filterActive = false;
         _this.inputControl = new _angular_forms.FormControl();
+        _this.sFormControl = new _angular_core.EventEmitter();
         return _this;
     }
     CheckboxFilterComponent.prototype.ngOnInit = function () {
@@ -1462,9 +1471,12 @@ var CheckboxFilterComponent = (function (_super) {
             _this.query = checked ? trueVal : falseVal;
             _this.setFilter();
         });
+        this.sFormControl.emit({ control: this });
     };
     CheckboxFilterComponent.prototype.resetFilter = function (event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+        }
         this.query = '';
         this.inputControl.setValue(false, { emitEvent: false });
         this.filterActive = false;
@@ -1472,6 +1484,10 @@ var CheckboxFilterComponent = (function (_super) {
     };
     return CheckboxFilterComponent;
 }(DefaultFilter));
+__decorate$17([
+    _angular_core.Output(),
+    __metadata$14("design:type", Object)
+], CheckboxFilterComponent.prototype, "sFormControl", void 0);
 CheckboxFilterComponent = __decorate$17([
     _angular_core.Component({
         selector: 'checkbox-filter',
@@ -1562,6 +1578,7 @@ var InputFilterComponent = (function (_super) {
     __extends$9(InputFilterComponent, _super);
     function InputFilterComponent() {
         var _this = _super.call(this) || this;
+        _this.sFormControl = new _angular_core.EventEmitter();
         _this.inputControl = new _angular_forms.FormControl();
         return _this;
     }
@@ -1572,9 +1589,17 @@ var InputFilterComponent = (function (_super) {
             .distinctUntilChanged()
             .debounceTime(this.delay)
             .subscribe(function (value) { return _this.setFilter(); });
+        this.sFormControl.emit({ control: this });
+    };
+    InputFilterComponent.prototype.resetFilter = function () {
+        this.inputControl.reset();
     };
     return InputFilterComponent;
 }(DefaultFilter));
+__decorate$20([
+    _angular_core.Output(),
+    __metadata$17("design:type", Object)
+], InputFilterComponent.prototype, "sFormControl", void 0);
 InputFilterComponent = __decorate$20([
     _angular_core.Component({
         selector: 'input-filter',
@@ -2428,7 +2453,7 @@ var TitleComponent = (function () {
                 compare: this.column.getCompareFunction(),
             },
         ]);
-        this.sort.emit(null);
+        this.sort.emit({ control: this });
     };
     TitleComponent.prototype.changeSortDirection = function () {
         if (this.currentDirection) {
@@ -2439,6 +2464,11 @@ var TitleComponent = (function () {
             this.currentDirection = this.column.sortDirection;
         }
         return this.currentDirection;
+    };
+    TitleComponent.prototype.setSortDirection = function (direction) {
+        this.column.sortDirection = direction;
+        this.currentDirection = this.column.sortDirection;
+        this.sort.emit({ control: this });
     };
     return TitleComponent;
 }());
@@ -2779,6 +2809,9 @@ var LocalDataSource = (function (_super) {
             this.setPage(1);
         }
     };
+    LocalDataSource.prototype.resetSort = function () {
+        this.setSort([], false);
+    };
     LocalDataSource.prototype.empty = function () {
         this.data = [];
         return _super.prototype.empty.call(this);
@@ -2903,7 +2936,7 @@ var LocalDataSource = (function (_super) {
         if (this.filterConf.filters) {
             if (this.filterConf.andOperator) {
                 this.filterConf.filters.forEach(function (fieldConf) {
-                    if (fieldConf['search'].length > 0) {
+                    if (fieldConf['search'] && fieldConf['search'].length > 0) {
                         data = LocalFilter
                             .filter(data, fieldConf['field'], fieldConf['search'], fieldConf['filter']);
                     }
@@ -2912,7 +2945,7 @@ var LocalDataSource = (function (_super) {
             else {
                 var mergedData_1 = [];
                 this.filterConf.filters.forEach(function (fieldConf) {
-                    if (fieldConf['search'].length > 0) {
+                    if (fieldConf['search'] && ['search'].length > 0) {
                         mergedData_1 = mergedData_1.concat(LocalFilter
                             .filter(data, fieldConf['field'], fieldConf['search'], fieldConf['filter']));
                     }
@@ -3003,6 +3036,7 @@ var Ng2SmartTableComponent = (function () {
             rowClassFunction: function () { return ""; }
         };
         this.isAllSelected = false;
+        this.filterItems = new Map();
     }
     Ng2SmartTableComponent.prototype.ngOnChanges = function (changes) {
         if (this.grid) {
@@ -3084,9 +3118,32 @@ var Ng2SmartTableComponent = (function () {
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.sort = function ($event) {
+        this.sortItem = $event;
+        for (var _i = 0, _a = Array.from(this.filterItems.keys()); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (this.sortItem && key !== this.sortItem.control.column.id) {
+                this.filterItems.get(key).control.resetFilter();
+                this.filterItems.delete(key);
+            }
+        }
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.filter = function ($event) {
+        if ($event.search && this.sortItem && $event.field !== this.sortItem.control.column.id) {
+            this.source.resetSort();
+        }
+        if ($event.field && $event.field !== "") {
+            this.filterItems.set($event.field, $event);
+        }
+        for (var _i = 0, _a = Array.from(this.filterItems.keys()); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if ($event.search && key !== $event.field) {
+                if (this.filterItems.get(key) && this.filterItems.get(key).control) {
+                    this.filterItems.get(key).control.resetFilter();
+                    this.filterItems.delete(key);
+                }
+            }
+        }
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.resetAllSelector = function () {
@@ -3265,7 +3322,7 @@ var ServerDataSource = (function (_super) {
         if (data instanceof Array) {
             return data;
         }
-        throw new Error("Data must be an array.\n    Please check that data extracted from the server response by the key '" + this.conf.dataKey + "' exists and is array.");
+        return [];
     };
     /**
      * Extracts total rows count from the server response
@@ -3283,7 +3340,46 @@ var ServerDataSource = (function (_super) {
         }
     };
     ServerDataSource.prototype.requestElements = function () {
-        return this.http.get(this.conf.endPoint, this.createRequestOptions());
+        if (this.isRequestValid()) {
+            return this.http.get(this.conf.endPoint, this.createRequestOptions());
+        }
+        return null;
+    };
+    /*
+    the request is valid when:
+    (a) only one filter item available
+    (b) only one sort item available
+    (c) when both filter item and sort item available they must be associated with the same key
+    */
+    ServerDataSource.prototype.isRequestValid = function () {
+        var filterField = '';
+        var filterCounter = 0;
+        if (this.filterConf.filters) {
+            this.filterConf.filters.forEach(function (fieldConf) {
+                if (fieldConf['search']) {
+                    filterField = fieldConf['field'];
+                    filterCounter += 1;
+                    if (filterCounter > 1) {
+                        return false;
+                    }
+                }
+            });
+        }
+        var sortKey = '';
+        var sortCounter = 0;
+        if (this.sortConf) {
+            this.sortConf.forEach(function (fieldConf) {
+                sortKey = fieldConf.field;
+                sortCounter += 1;
+                if (sortCounter > 1) {
+                    return false;
+                }
+            });
+            if (filterCounter == 1 && sortCounter == 1 && filterField !== sortKey) {
+                return false;
+            }
+        }
+        return true;
     };
     ServerDataSource.prototype.createRequestOptions = function () {
         var requestOptions = {};

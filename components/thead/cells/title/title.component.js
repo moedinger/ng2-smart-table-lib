@@ -44,7 +44,7 @@ var TitleComponent = (function () {
                 compare: this.column.getCompareFunction(),
             },
         ]);
-        this.sort.emit(null);
+        this.sort.emit({ control: this });
     };
     TitleComponent.prototype.changeSortDirection = function () {
         if (this.currentDirection) {
@@ -55,6 +55,11 @@ var TitleComponent = (function () {
             this.currentDirection = this.column.sortDirection;
         }
         return this.currentDirection;
+    };
+    TitleComponent.prototype.setSortDirection = function (direction) {
+        this.column.sortDirection = direction;
+        this.currentDirection = this.column.sortDirection;
+        this.sort.emit({ control: this });
     };
     return TitleComponent;
 }());

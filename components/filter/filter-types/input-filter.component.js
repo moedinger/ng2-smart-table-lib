@@ -17,7 +17,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/debounceTime';
@@ -27,6 +27,7 @@ var InputFilterComponent = (function (_super) {
     __extends(InputFilterComponent, _super);
     function InputFilterComponent() {
         var _this = _super.call(this) || this;
+        _this.sFormControl = new EventEmitter();
         _this.inputControl = new FormControl();
         return _this;
     }
@@ -37,9 +38,17 @@ var InputFilterComponent = (function (_super) {
             .distinctUntilChanged()
             .debounceTime(this.delay)
             .subscribe(function (value) { return _this.setFilter(); });
+        this.sFormControl.emit({ control: this });
+    };
+    InputFilterComponent.prototype.resetFilter = function () {
+        this.inputControl.reset();
     };
     return InputFilterComponent;
 }(DefaultFilter));
+__decorate([
+    Output(),
+    __metadata("design:type", Object)
+], InputFilterComponent.prototype, "sFormControl", void 0);
 InputFilterComponent = __decorate([
     Component({
         selector: 'input-filter',

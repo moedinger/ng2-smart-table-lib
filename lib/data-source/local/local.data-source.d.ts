@@ -17,6 +17,7 @@ export declare class LocalDataSource extends DataSource {
     getFilteredAndSorted(): Promise<any>;
     getAll(): Promise<any>;
     reset(silent?: boolean): void;
+    resetSort(): void;
     empty(): Promise<any>;
     count(): number;
     /**

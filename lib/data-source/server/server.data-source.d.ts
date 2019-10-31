@@ -25,6 +25,7 @@ export declare class ServerDataSource extends LocalDataSource {
      */
     protected extractTotalFromResponse(res: any): number;
     protected requestElements(): Observable<any>;
+    isRequestValid(): boolean;
     protected createRequestOptions(): RequestOptionsArgs;
     protected addSortRequestOptions(requestOptions: RequestOptionsArgs): RequestOptionsArgs;
     protected addFilterRequestOptions(requestOptions: RequestOptionsArgs): RequestOptionsArgs;

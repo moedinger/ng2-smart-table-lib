@@ -11,4 +11,5 @@ export declare class TitleComponent implements OnChanges {
     ngOnChanges(changes: SimpleChanges): void;
     _sort(event: any): void;
     changeSortDirection(): string;
+    setSortDirection(direction: string): void;
 }

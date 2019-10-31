@@ -72,6 +72,7 @@ var Ng2SmartTableComponent = (function () {
             rowClassFunction: function () { return ""; }
         };
         this.isAllSelected = false;
+        this.filterItems = new Map();
     }
     Ng2SmartTableComponent.prototype.ngOnChanges = function (changes) {
         if (this.grid) {
@@ -153,9 +154,32 @@ var Ng2SmartTableComponent = (function () {
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.sort = function ($event) {
+        this.sortItem = $event;
+        for (var _i = 0, _a = Array.from(this.filterItems.keys()); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (this.sortItem && key !== this.sortItem.control.column.id) {
+                this.filterItems.get(key).control.resetFilter();
+                this.filterItems.delete(key);
+            }
+        }
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.filter = function ($event) {
+        if ($event.search && this.sortItem && $event.field !== this.sortItem.control.column.id) {
+            this.source.resetSort();
+        }
+        if ($event.field && $event.field !== "") {
+            this.filterItems.set($event.field, $event);
+        }
+        for (var _i = 0, _a = Array.from(this.filterItems.keys()); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if ($event.search && key !== $event.field) {
+                if (this.filterItems.get(key) && this.filterItems.get(key).control) {
+                    this.filterItems.get(key).control.resetFilter();
+                    this.filterItems.delete(key);
+                }
+            }
+        }
         this.resetAllSelector();
     };
     Ng2SmartTableComponent.prototype.resetAllSelector = function () {

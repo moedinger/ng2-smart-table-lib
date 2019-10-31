@@ -17,7 +17,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { DefaultFilter } from './default-filter';
 import 'rxjs/add/operator/debounceTime';
@@ -27,6 +27,7 @@ var CheckboxFilterComponent = (function (_super) {
         var _this = _super.call(this) || this;
         _this.filterActive = false;
         _this.inputControl = new FormControl();
+        _this.sFormControl = new EventEmitter();
         return _this;
     }
     CheckboxFilterComponent.prototype.ngOnInit = function () {
@@ -40,9 +41,12 @@ var CheckboxFilterComponent = (function (_super) {
             _this.query = checked ? trueVal : falseVal;
             _this.setFilter();
         });
+        this.sFormControl.emit({ control: this });
     };
     CheckboxFilterComponent.prototype.resetFilter = function (event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+        }
         this.query = '';
         this.inputControl.setValue(false, { emitEvent: false });
         this.filterActive = false;
@@ -50,6 +54,10 @@ var CheckboxFilterComponent = (function (_super) {
     };
     return CheckboxFilterComponent;
 }(DefaultFilter));
+__decorate([
+    Output(),
+    __metadata("design:type", Object)
+], CheckboxFilterComponent.prototype, "sFormControl", void 0);
 CheckboxFilterComponent = __decorate([
     Component({
         selector: 'checkbox-filter',

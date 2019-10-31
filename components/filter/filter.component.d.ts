@@ -8,7 +8,9 @@ export declare class FilterComponent implements OnChanges {
     inputClass: string;
     filter: EventEmitter<any>;
     query: string;
+    formControl: any;
     protected dataChangedSub: Subscription;
     ngOnChanges(changes: SimpleChanges): void;
+    onSFormControl($event: any): void;
     onFilter(query: string): void;
 }

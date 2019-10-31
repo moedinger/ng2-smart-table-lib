@@ -1321,7 +1321,15 @@ let FilterComponent = class FilterComponent {
             });
         }
     }
+    onSFormControl($event) {
+        this.formControl = $event.control;
+    }
     onFilter(query) {
+        this.filter.emit({
+            search: query,
+            field: this.column.id,
+            control: this.formControl,
+        });
         this.source.addFilter({
             field: this.column.id,
             search: query,
@@ -1361,7 +1369,8 @@ FilterComponent = __decorate$16([
                        [query]="query"
                        [ngClass]="inputClass"
                        [column]="column"
-                       (filter)="onFilter($event)">
+                       (filter)="onFilter($event)"
+                       (sFormControl)="onSFormControl($event)">
       </checkbox-filter>
       <completer-filter *ngSwitchCase="'completer'"
                         [query]="query"
@@ -1373,7 +1382,8 @@ FilterComponent = __decorate$16([
                     [query]="query"
                     [ngClass]="inputClass"
                     [column]="column"
-                    (filter)="onFilter($event)">
+                    (filter)="onFilter($event)"
+                    (sFormControl)="onSFormControl($event)">
       </input-filter>
     </div>
   `,
@@ -1434,6 +1444,7 @@ let CheckboxFilterComponent = class CheckboxFilterComponent extends DefaultFilte
         super();
         this.filterActive = false;
         this.inputControl = new FormControl();
+        this.sFormControl = new EventEmitter();
     }
     ngOnInit() {
         this.changesSubscription = this.inputControl.valueChanges
@@ -1445,15 +1456,22 @@ let CheckboxFilterComponent = class CheckboxFilterComponent extends DefaultFilte
             this.query = checked ? trueVal : falseVal;
             this.setFilter();
         });
+        this.sFormControl.emit({ control: this });
     }
     resetFilter(event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+        }
         this.query = '';
         this.inputControl.setValue(false, { emitEvent: false });
         this.filterActive = false;
         this.setFilter();
     }
 };
+__decorate$17([
+    Output(),
+    __metadata$14("design:type", Object)
+], CheckboxFilterComponent.prototype, "sFormControl", void 0);
 CheckboxFilterComponent = __decorate$17([
     Component({
         selector: 'checkbox-filter',
@@ -1532,6 +1550,7 @@ var __metadata$17 = (this && this.__metadata) || function (k, v) {
 let InputFilterComponent = class InputFilterComponent extends DefaultFilter {
     constructor() {
         super();
+        this.sFormControl = new EventEmitter();
         this.inputControl = new FormControl();
     }
     ngOnInit() {
@@ -1540,8 +1559,16 @@ let InputFilterComponent = class InputFilterComponent extends DefaultFilter {
             .distinctUntilChanged()
             .debounceTime(this.delay)
             .subscribe((value) => this.setFilter());
+        this.sFormControl.emit({ control: this });
+    }
+    resetFilter() {
+        this.inputControl.reset();
     }
 };
+__decorate$20([
+    Output(),
+    __metadata$17("design:type", Object)
+], InputFilterComponent.prototype, "sFormControl", void 0);
 InputFilterComponent = __decorate$20([
     Component({
         selector: 'input-filter',
@@ -2451,7 +2478,7 @@ let TitleComponent = class TitleComponent {
                 compare: this.column.getCompareFunction(),
             },
         ]);
-        this.sort.emit(null);
+        this.sort.emit({ control: this });
     }
     changeSortDirection() {
         if (this.currentDirection) {
@@ -2462,6 +2489,11 @@ let TitleComponent = class TitleComponent {
             this.currentDirection = this.column.sortDirection;
         }
         return this.currentDirection;
+    }
+    setSortDirection(direction) {
+        this.column.sortDirection = direction;
+        this.currentDirection = this.column.sortDirection;
+        this.sort.emit({ control: this });
     }
 };
 __decorate$36([
@@ -2832,6 +2864,9 @@ class LocalDataSource extends DataSource {
             this.setPage(1);
         }
     }
+    resetSort() {
+        this.setSort([], false);
+    }
     empty() {
         this.data = [];
         return super.empty();
@@ -2947,7 +2982,7 @@ class LocalDataSource extends DataSource {
         if (this.filterConf.filters) {
             if (this.filterConf.andOperator) {
                 this.filterConf.filters.forEach((fieldConf) => {
-                    if (fieldConf['search'].length > 0) {
+                    if (fieldConf['search'] && fieldConf['search'].length > 0) {
                         data = LocalFilter
                             .filter(data, fieldConf['field'], fieldConf['search'], fieldConf['filter']);
                     }
@@ -2956,7 +2991,7 @@ class LocalDataSource extends DataSource {
             else {
                 let mergedData = [];
                 this.filterConf.filters.forEach((fieldConf) => {
-                    if (fieldConf['search'].length > 0) {
+                    if (fieldConf['search'] && ['search'].length > 0) {
                         mergedData = mergedData.concat(LocalFilter
                             .filter(data, fieldConf['field'], fieldConf['search'], fieldConf['filter']));
                     }
@@ -3046,6 +3081,7 @@ let Ng2SmartTableComponent = class Ng2SmartTableComponent {
             rowClassFunction: () => ""
         };
         this.isAllSelected = false;
+        this.filterItems = new Map();
     }
     ngOnChanges(changes) {
         if (this.grid) {
@@ -3126,9 +3162,30 @@ let Ng2SmartTableComponent = class Ng2SmartTableComponent {
         this.resetAllSelector();
     }
     sort($event) {
+        this.sortItem = $event;
+        for (let key of Array.from(this.filterItems.keys())) {
+            if (this.sortItem && key !== this.sortItem.control.column.id) {
+                this.filterItems.get(key).control.resetFilter();
+                this.filterItems.delete(key);
+            }
+        }
         this.resetAllSelector();
     }
     filter($event) {
+        if ($event.search && this.sortItem && $event.field !== this.sortItem.control.column.id) {
+            this.source.resetSort();
+        }
+        if ($event.field && $event.field !== "") {
+            this.filterItems.set($event.field, $event);
+        }
+        for (let key of Array.from(this.filterItems.keys())) {
+            if ($event.search && key !== $event.field) {
+                if (this.filterItems.get(key) && this.filterItems.get(key).control) {
+                    this.filterItems.get(key).control.resetFilter();
+                    this.filterItems.delete(key);
+                }
+            }
+        }
         this.resetAllSelector();
     }
     resetAllSelector() {
@@ -3287,8 +3344,7 @@ class ServerDataSource extends LocalDataSource {
         if (data instanceof Array) {
             return data;
         }
-        throw new Error(`Data must be an array.
-    Please check that data extracted from the server response by the key '${this.conf.dataKey}' exists and is array.`);
+        return [];
     }
     /**
      * Extracts total rows count from the server response
@@ -3306,7 +3362,46 @@ class ServerDataSource extends LocalDataSource {
         }
     }
     requestElements() {
-        return this.http.get(this.conf.endPoint, this.createRequestOptions());
+        if (this.isRequestValid()) {
+            return this.http.get(this.conf.endPoint, this.createRequestOptions());
+        }
+        return null;
+    }
+    /*
+    the request is valid when:
+    (a) only one filter item available
+    (b) only one sort item available
+    (c) when both filter item and sort item available they must be associated with the same key
+    */
+    isRequestValid() {
+        let filterField = '';
+        let filterCounter = 0;
+        if (this.filterConf.filters) {
+            this.filterConf.filters.forEach((fieldConf) => {
+                if (fieldConf['search']) {
+                    filterField = fieldConf['field'];
+                    filterCounter += 1;
+                    if (filterCounter > 1) {
+                        return false;
+                    }
+                }
+            });
+        }
+        let sortKey = '';
+        let sortCounter = 0;
+        if (this.sortConf) {
+            this.sortConf.forEach((fieldConf) => {
+                sortKey = fieldConf.field;
+                sortCounter += 1;
+                if (sortCounter > 1) {
+                    return false;
+                }
+            });
+            if (filterCounter == 1 && sortCounter == 1 && filterField !== sortKey) {
+                return false;
+            }
+        }
+        return true;
     }
     createRequestOptions() {
         let requestOptions = {};
