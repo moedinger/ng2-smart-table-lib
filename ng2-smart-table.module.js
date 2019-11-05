@@ -13,6 +13,7 @@ import { PagerModule } from './components/pager/pager.module';
 import { TBodyModule } from './components/tbody/tbody.module';
 import { THeadModule } from './components/thead/thead.module';
 import { Ng2SmartTableComponent } from './ng2-smart-table.component';
+import { Ng2SmartTableSolComponent } from './ng2-smart-table-sol.component';
 var Ng2SmartTableModule = (function () {
     function Ng2SmartTableModule() {
     }
@@ -31,9 +32,11 @@ Ng2SmartTableModule = __decorate([
             THeadModule,
         ],
         declarations: [
+            Ng2SmartTableSolComponent,
             Ng2SmartTableComponent,
         ],
         exports: [
+            Ng2SmartTableSolComponent,
             Ng2SmartTableComponent,
         ],
     })
